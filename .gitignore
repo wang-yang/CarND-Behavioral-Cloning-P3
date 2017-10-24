@@ -3,3 +3,5 @@ __MACOSX/
 data.zip
 data/
 model.h5
+.DS_Store
+simulator/
