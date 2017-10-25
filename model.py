@@ -2,6 +2,11 @@ import cv2
 import csv
 import numpy as np
 import os
+import sklearn
+from keras.models import Sequential, Model
+from keras.layers import Flatten, Dense, Lambda, Convolution2D, Cropping2D
+from keras.layers.pooling import MaxPooling2D
+from sklearn.model_selection import train_test_split
 
 def getLinesFromDrivingLogs(dataPath, skipHeader=False):
     """
@@ -16,7 +21,6 @@ def getLinesFromDrivingLogs(dataPath, skipHeader=False):
         for line in reader:
             lines.append(line)
     return lines
-
 
 def findImages(dataPath):
     """
@@ -44,7 +48,6 @@ def findImages(dataPath):
         leftTotal.extend(left)
         rightTotal.extend(right)
         measurementTotal.extend(measurements)
-
     return (centerTotal, leftTotal, rightTotal, measurementTotal)
 
 def combineImages(center, left, right, measurement, correction):
@@ -61,8 +64,6 @@ def combineImages(center, left, right, measurement, correction):
     measurements.extend([x + correction for x in measurement])
     measurements.extend([x - correction for x in measurement])
     return (imagePaths, measurements)
-
-import sklearn
 
 def generator(samples, batch_size=32):
     """
@@ -82,7 +83,8 @@ def generator(samples, batch_size=32):
                 image = cv2.cvtColor(originalImage, cv2.COLOR_BGR2RGB)
                 images.append(image)
                 angles.append(measurement)
-                # Flipping
+
+                # Flipping, add more data
                 images.append(cv2.flip(image,1))
                 angles.append(measurement*-1.0)
 
@@ -90,11 +92,6 @@ def generator(samples, batch_size=32):
             inputs = np.array(images)
             outputs = np.array(angles)
             yield sklearn.utils.shuffle(inputs, outputs)
-
-from keras.models import Sequential, Model
-from keras.layers import Flatten, Dense, Lambda, Convolution2D, Cropping2D
-from keras.layers.pooling import MaxPooling2D
-#import matplotlib.pyplot as plt
 
 def createPreProcessingLayers():
     """
@@ -122,20 +119,22 @@ def nVidiaModel():
     model.add(Dense(1))
     return model
 
-
-# Reading images locations.
+# Reading images locations for training, and split them into center, left, right, and measurements(steering angle)
 centerPaths, leftPaths, rightPaths, measurements = findImages('data')
-imagePaths, measurements = combineImages(centerPaths, leftPaths, rightPaths, measurements, 0.2)
-print('Total Images: {}'.format( len(imagePaths)))
 
-# Splitting samples and creating generators.
-from sklearn.model_selection import train_test_split
+# Merge the center, left, right camera image together, and apply the calibration 
+imagePaths, measurements = combineImages(centerPaths, leftPaths, rightPaths, measurements, 0.2)
+
+print('Total Images: {}'.format(len(imagePaths)))
+
+# Create training data, and validation data
 samples = list(zip(imagePaths, measurements))
 train_samples, validation_samples = train_test_split(samples, test_size=0.2)
 
 print('Train samples: {}'.format(len(train_samples)))
 print('Validation samples: {}'.format(len(validation_samples)))
 
+# We don't want to save all training data into memory, so we use generator
 train_generator = generator(train_samples, batch_size=32)
 validation_generator = generator(validation_samples, batch_size=32)
 
@@ -154,11 +153,3 @@ print('Loss')
 print(history_object.history['loss'])
 print('Validation Loss')
 print(history_object.history['val_loss'])
-
-# plt.plot(history_object.history['loss'])
-# plt.plot(history_object.history['val_loss'])
-# plt.title('model mean squared error loss')
-# plt.ylabel('mean squared error loss')
-# plt.xlabel('epoch')
-# plt.legend(['training set', 'validation set'], loc='upper right')
-# plt.show()
