@@ -11,6 +11,11 @@ The goals / steps of this project are the following:
 
 [image1]: ./examples/model_summary.png "Model Summary"
 [image2]: ./examples/final_model.png "Final Model"
+[image3]: ./examples/center.jpg "Center"
+[image4]: ./examples/left.jpg "Left"
+[image5]: ./examples/right.jpg "Right"
+[image6]: ./examples/original.png "Original"
+[image7]: ./examples/filpped.png "Filpped"
 
 ---
 
@@ -23,7 +28,7 @@ My project includes the following files:
 * drive.py for driving the car in autonomous mode
 * model.h5 containing a trained convolution neural network
 * writeup.md summarizing the results
-* run1.mpt the video record of simulation 
+* run1.mpt the video record of simulation
 * project.ipynd generate some diagram which I used to describe model
 
 #### 2. Submission includes functional code
@@ -109,8 +114,45 @@ The final neural network architecture is shown bellow
 #### 3. Creation of the Training Set & Training Process
 
 I only use the Udacity Data set.
-And as I describe above, use all image from 3 camera(center, left, right).
+And as I describe above, use all image from 3 camera(center, left, right), with steering correction.
+
+**Here are some sample image from training set:**
+
+From the center camera, we keep the steering angle.
+
+![Center][image3]
+
+From the left camera, we apply `measurements.extend([x + correction for x in measurement])` to it's steering angle, the `correction` here we used is `0.2`
+
+![Left][image4]
+
+From the right camera, we apply `measurements.extend([x - correction for x in measurement])` to it's steering angle, the `correction` here we used is also `0.2`
+
+![Right][image5]
+
 And shuffled them randomly.
+
 Also split the data set into training data and validation with 8:2 ratio.
+
 Apart from that, I also augmented the data by flipping the image.
+
+**Below is an example of flipping**
+
+With this code:
+
+```python
+# Flipping, add more data
+images.append(cv2.flip(image, 1))
+angles.append(measurement * -1.0)
+```
+
+The original image is
+
+![Original][image6]
+
+
+After flipping, we have:
+
+![Flipping][image7]
+
 With all this technique, the Nvidia model produced a pretty well model.
