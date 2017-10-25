@@ -23,6 +23,7 @@ My project includes the following files:
 * drive.py for driving the car in autonomous mode
 * model.h5 containing a trained convolution neural network
 * writeup.md summarizing the results
+* run1.mpt the video record of simulation 
 * project.ipynd generate some diagram which I used to describe model
 
 #### 2. Submission includes functional code
